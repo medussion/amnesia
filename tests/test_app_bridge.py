@@ -41,6 +41,8 @@ class AppBridgeTest(unittest.TestCase):
         self.assertEqual(result["home"], str(self.root.resolve()))
         self.assertIn("assessment", result)
         self.assertIn("items", result)
+        self.assertEqual(result["capacity_gauge_bytes"], 10 * 1024**3)
+        self.assertGreaterEqual(result["active_footprint_bytes"], 4096)
         after = {
             path.relative_to(self.root): path.read_bytes()
             for path in self.root.rglob("*")

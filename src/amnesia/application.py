@@ -22,7 +22,7 @@ from .env import (
     pinned_thread_ids,
 )
 from .journal import find_latest_journal
-from .model import Settings
+from .model import Finding, Settings
 from .tasks import ALL_TASKS
 from .tasks.sessions import plan_selected as plan_selected_sessions
 
@@ -42,6 +42,26 @@ OPTION_SPEC: dict[str, tuple[type, Any, Any]] = {
     "archive_dirty_worktrees": (bool, None, None),
     "archive_leftovers": (bool, None, None),
 }
+
+# The header gauge is deliberately based on hot, locally active Codex data.
+# Archived material is excluded so a successful cleanup is immediately visible.
+ACTIVE_FOOTPRINT_DIRS = frozenset({"sessions", "worktrees"})
+# Ten GiB keeps ordinary multi-GB homes legible while still saturating at a
+# clearly unhealthy local footprint. The UI exposes the denominator explicitly.
+CAPACITY_GAUGE_BYTES = 10 * 1024**3
+
+
+def active_footprint_bytes(findings: Iterable[Finding]) -> int:
+    total = 0
+    for finding in findings:
+        if finding.code == "database":
+            total += finding.bytes
+        elif (
+            finding.code == "dir_size"
+            and finding.detail.get("dir") in ACTIVE_FOOTPRINT_DIRS
+        ):
+            total += finding.bytes
+    return total
 
 
 def _coerce(name: str, raw: Any) -> Any:
@@ -89,6 +109,7 @@ def build_state(home: CodexHome, settings: Settings) -> dict[str, Any]:
         session.close()
 
     assessment = assess(plan)
+    footprint_bytes = active_footprint_bytes(plan.findings)
     running = codex_processes(home)
     journal = find_latest_journal(settings.backup_root or default_backup_root(home))
     handoff_root = handoff.default_handoff_root(home, settings.backup_root)
@@ -111,6 +132,8 @@ def build_state(home: CodexHome, settings: Settings) -> dict[str, Any]:
         "skipped": plan.skipped,
         "operation_count": len(plan.operations),
         "reclaimable_bytes": plan.reclaimable_bytes,
+        "active_footprint_bytes": footprint_bytes,
+        "capacity_gauge_bytes": CAPACITY_GAUGE_BYTES,
         "codex_running": [
             {"pid": process.pid, "name": process.name, "reason": process.reason}
             for process in running

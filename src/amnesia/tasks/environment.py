@@ -40,12 +40,14 @@ class EnvironmentTask(Task):
         for name in TRACKED_DIRS:
             path = ctx.home.root / name
             if path.exists():
+                size = dir_size(path)
                 findings.append(
                     Finding(
                         self.name,
                         "dir_size",
                         LEVEL_INFO,
-                        f"{human_bytes(dir_size(path)):>10}  {name}/",
+                        f"{human_bytes(size):>10}  {name}/",
+                        bytes=size,
                         detail={"dir": name},
                     )
                 )

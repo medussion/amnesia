@@ -60,7 +60,14 @@ struct RootView: View {
                 .buttonStyle(.borderless)
                 .help("브랜드 선택으로 돌아가기")
             }
-            headerMark
+            appIconMark
+            if selectedProvider != nil {
+                BrainCapacityGauge(
+                    progress: brainGaugeProgress,
+                    activeBytes: brainGaugeActiveBytes,
+                    capacityBytes: brainGaugeCapacityBytes
+                )
+            }
             VStack(alignment: .leading, spacing: 2) {
                 Text("Amnesia")
                     .font(.title2.weight(.bold))
@@ -96,20 +103,31 @@ struct RootView: View {
         return "AI 도구의 로컬 기억을 안전하게 정리합니다."
     }
 
-    private var headerMark: some View {
+    private var brainGaugeProgress: Double {
+        selectedProvider?.isAvailable == true ? model.capacityFill : 0
+    }
+
+    private var brainGaugeActiveBytes: Int64? {
+        selectedProvider?.isAvailable == true ? model.state?.activeFootprintBytes : nil
+    }
+
+    private var brainGaugeCapacityBytes: Int64? {
+        selectedProvider?.isAvailable == true ? model.state?.capacityGaugeBytes : nil
+    }
+
+    private var appIconMark: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .fill(.purple.opacity(0.12))
+                .fill(.black)
             if let icon = amnesiaAppIcon {
                 Image(nsImage: icon)
                     .resizable()
                     .scaledToFill()
-                Color.black.opacity(0.10)
+            } else {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(.red)
             }
-            Image(systemName: "brain.head.profile.fill")
-                .font(.system(size: 24))
-                .foregroundStyle(.purple)
-                .shadow(color: .black.opacity(0.72), radius: 1.4, y: 0.6)
         }
         .frame(width: 40, height: 40)
         .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))

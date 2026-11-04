@@ -15,6 +15,14 @@ final class AppModel: ObservableObject {
         !(state?.codexRunning.isEmpty ?? true)
     }
 
+    var capacityFill: Double {
+        guard let state, state.capacityGaugeBytes > 0 else { return 0 }
+        return min(
+            max(Double(state.activeFootprintBytes) / Double(state.capacityGaugeBytes), 0),
+            1
+        )
+    }
+
     func refresh() async {
         await execute {
             let latest = try await client.state()

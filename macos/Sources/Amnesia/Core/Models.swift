@@ -11,6 +11,8 @@ struct BridgeState: Decodable {
     let findings: [Finding]
     let operationCount: Int
     let reclaimableBytes: Int64
+    let activeFootprintBytes: Int64
+    let capacityGaugeBytes: Int64
     let codexRunning: [CodexProcess]
     let lastJournal: String?
 
@@ -19,6 +21,8 @@ struct BridgeState: Decodable {
         case backupRoot = "backup_root"
         case operationCount = "operation_count"
         case reclaimableBytes = "reclaimable_bytes"
+        case activeFootprintBytes = "active_footprint_bytes"
+        case capacityGaugeBytes = "capacity_gauge_bytes"
         case codexRunning = "codex_running"
         case lastJournal = "last_journal"
     }

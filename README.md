@@ -1,8 +1,11 @@
 # Amnesia
 
 Amnesia is a native macOS utility for inspecting, handing off, archiving, and
-restoring local Codex state without loading large conversations into the app.
-The bundle identifier is `medusia.com.amnesia`.
+restoring local AI-tool state without loading large conversations into the app.
+Its provider picker identifies Codex, Claude Code, Gemini CLI, Cursor, Devin
+Desktop / Windsurf, and GitHub Copilot with their official marks. Codex is the
+first fully implemented adapter; planned providers never fall through to Codex
+data. The bundle identifier is `medusia.com.amnesia`.
 
 Normal cleanup is backup-first, journalled before execution, and reversible.
 Permanent archive deletion is a separate action with no default selection and
@@ -10,8 +13,10 @@ requires typing `영구 삭제`.
 
 ## macOS app
 
-The SwiftUI app is a thin presentation layer. It never opens Codex databases or
-session transcripts itself. A bundled helper calls the same Python application
+The SwiftUI app is a thin presentation layer. A provider catalog owns the entry
+screen while each data adapter owns its local format and lifecycle. The app
+never opens Codex databases or session transcripts itself. The implemented
+Codex adapter uses a bundled helper that calls the same Python application
 services used by the CLI and browser UI.
 
 Build a self-contained, ad-hoc signed app:

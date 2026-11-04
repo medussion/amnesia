@@ -2,31 +2,17 @@ import SwiftUI
 
 struct RootView: View {
     @StateObject private var model = AppModel()
+    @State private var selectedProvider: AssistantProvider?
 
     var body: some View {
         VStack(spacing: 0) {
             header
             Divider()
-            Group {
-                if let state = model.state {
-                    TabView {
-                        DashboardView(model: model, state: state)
-                            .tabItem { Label("정리", systemImage: "sparkles") }
-                        HandoffView(model: model, sessions: state.sessions)
-                            .tabItem { Label("Handoff", systemImage: "doc.text") }
-                        ArchiveView(model: model, archives: state.archives)
-                            .tabItem { Label("아카이브", systemImage: "archivebox") }
-                    }
-                    .padding(18)
-                } else if model.isBusy {
-                    ProgressView("Codex 상태를 읽는 중…")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    EmptyState(
-                        symbol: "externaldrive.badge.questionmark",
-                        title: "Codex 상태를 읽지 못했습니다",
-                        detail: "새로고침을 눌러 다시 시도하세요."
-                    )
+            if let selectedProvider {
+                ProviderWorkspaceView(model: model, provider: selectedProvider)
+            } else {
+                ProviderPickerView(providers: AssistantProvider.catalog) { provider in
+                    selectedProvider = provider
                 }
             }
         }
@@ -42,8 +28,8 @@ struct RootView: View {
                 }
             }
         }
-        .task {
-            if model.state == nil {
+        .task(id: selectedProvider?.id) {
+            if selectedProvider?.isAvailable == true, model.state == nil {
                 await model.refresh()
             }
         }
@@ -62,6 +48,17 @@ struct RootView: View {
 
     private var header: some View {
         HStack(spacing: 13) {
+            if selectedProvider != nil {
+                Button {
+                    selectedProvider = nil
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.body.weight(.semibold))
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.borderless)
+                .help("브랜드 선택으로 돌아가기")
+            }
             Image(systemName: "brain.head.profile.fill")
                 .font(.system(size: 24))
                 .foregroundStyle(.purple)
@@ -70,26 +67,35 @@ struct RootView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Amnesia")
                     .font(.title2.weight(.bold))
-                Text("Codex 로컬 상태를 안전하게 정리하고 되돌립니다.")
+                Text(headerSubtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            if model.codexIsRunning {
+            if selectedProvider?.isAvailable == true, model.codexIsRunning {
                 Label("Codex 실행 중", systemImage: "exclamationmark.circle.fill")
                     .foregroundStyle(.orange)
-            } else if model.state != nil {
+            } else if selectedProvider?.isAvailable == true, model.state != nil {
                 Label("변경 가능", systemImage: "checkmark.circle.fill")
                     .foregroundStyle(.green)
             }
-            Button {
-                Task { await model.refresh() }
-            } label: {
-                Label("새로고침", systemImage: "arrow.clockwise")
+            if selectedProvider?.isAvailable == true {
+                Button {
+                    Task { await model.refresh() }
+                } label: {
+                    Label("새로고침", systemImage: "arrow.clockwise")
+                }
+                .disabled(model.isBusy)
             }
-            .disabled(model.isBusy)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 14)
+    }
+
+    private var headerSubtitle: String {
+        if let selectedProvider {
+            return "\(selectedProvider.name) 로컬 작업 공간"
+        }
+        return "AI 도구의 로컬 기억을 안전하게 정리합니다."
     }
 }

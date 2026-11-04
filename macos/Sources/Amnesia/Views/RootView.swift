@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct RootView: View {
@@ -59,11 +60,7 @@ struct RootView: View {
                 .buttonStyle(.borderless)
                 .help("브랜드 선택으로 돌아가기")
             }
-            Image(systemName: "brain.head.profile.fill")
-                .font(.system(size: 24))
-                .foregroundStyle(.purple)
-                .frame(width: 40, height: 40)
-                .background(.purple.opacity(0.12), in: RoundedRectangle(cornerRadius: 11))
+            headerMark
             VStack(alignment: .leading, spacing: 2) {
                 Text("Amnesia")
                     .font(.title2.weight(.bold))
@@ -97,5 +94,35 @@ struct RootView: View {
             return "\(selectedProvider.name) 로컬 작업 공간"
         }
         return "AI 도구의 로컬 기억을 안전하게 정리합니다."
+    }
+
+    private var headerMark: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                .fill(.purple.opacity(0.12))
+            if let icon = amnesiaAppIcon {
+                Image(nsImage: icon)
+                    .resizable()
+                    .scaledToFill()
+                Color.black.opacity(0.10)
+            }
+            Image(systemName: "brain.head.profile.fill")
+                .font(.system(size: 24))
+                .foregroundStyle(.purple)
+                .shadow(color: .black.opacity(0.72), radius: 1.4, y: 0.6)
+        }
+        .frame(width: 40, height: 40)
+        .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                .stroke(Color.white.opacity(0.10), lineWidth: 0.8)
+        }
+    }
+
+    private var amnesiaAppIcon: NSImage? {
+        guard let url = Bundle.main.url(forResource: "Amnesia", withExtension: "icns") else {
+            return nil
+        }
+        return NSImage(contentsOf: url)
     }
 }

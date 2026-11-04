@@ -10,6 +10,8 @@
     <string>Amnesia</string>
     <key>CFBundleIdentifier</key>
     <string>medusia.com.amnesia</string>
+    <key>CFBundleIconFile</key>
+    <string>Amnesia</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>

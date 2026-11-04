@@ -15,6 +15,8 @@ fi
 rm -rf "$BUILD_ROOT" "$APP" "$DIST_ROOT/Amnesia-macOS.zip"
 mkdir -p "$BUILD_ROOT/helper-dist" "$BUILD_ROOT/helper-work" "$BUILD_ROOT/spec" "$DIST_ROOT"
 
+"$ROOT/scripts/build_app_icon.sh"
+
 "$PYTHON_BIN" -m PyInstaller --clean --noconfirm --onefile --name amnesia-helper --paths "$ROOT/src" --distpath "$BUILD_ROOT/helper-dist" --workpath "$BUILD_ROOT/helper-work" --specpath "$BUILD_ROOT/spec" "$ROOT/scripts/amnesia_helper.py"
 
 swift build --package-path "$ROOT" --scratch-path "$BUILD_ROOT/swift" -c release
@@ -23,6 +25,7 @@ SWIFT_BIN=$(swift build --package-path "$ROOT" --scratch-path "$BUILD_ROOT/swift
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$SWIFT_BIN/Amnesia" "$APP/Contents/MacOS/Amnesia"
 cp "$BUILD_ROOT/helper-dist/amnesia-helper" "$APP/Contents/Resources/amnesia-helper"
+cp "$ROOT/macos/Resources/Amnesia.icns" "$APP/Contents/Resources/Amnesia.icns"
 cp "$ROOT/macos/Resources/Info.plist" "$APP/Contents/Info.plist"
 chmod 755 "$APP/Contents/MacOS/Amnesia" "$APP/Contents/Resources/amnesia-helper"
 

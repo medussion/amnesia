@@ -109,6 +109,12 @@ class WebUiTestCase(unittest.TestCase):
             patcher.start()
             self.addCleanup(patcher.stop)
 
+        disk_patcher = mock.patch(
+            "amnesia.tasks.environment.free_bytes", return_value=100 * 1024**3
+        )
+        disk_patcher.start()
+        self.addCleanup(disk_patcher.stop)
+
         home = resolve_codex_home(self.root)
         settings = Settings(backup_root=base / "backups")
         self.context = UiContext(home, settings, load_page())

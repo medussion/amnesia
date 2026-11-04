@@ -5,6 +5,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from amnesia import engine
 from amnesia.advice import (
@@ -21,6 +22,7 @@ from amnesia.model import Settings
 from .fake_home import FakeHome, ThreadSpec
 
 MB = 1024**2
+GB = 1024**3
 
 
 def scan(root: Path, **overrides) -> "engine.Plan":
@@ -45,6 +47,11 @@ class VerdictTest(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name) / "codex"
         self.addCleanup(self._tmp.cleanup)
+        disk_patcher = mock.patch(
+            "amnesia.tasks.environment.free_bytes", return_value=100 * GB
+        )
+        disk_patcher.start()
+        self.addCleanup(disk_patcher.stop)
 
     def _signal(self, assessment, code):
         return next((s for s in assessment.signals if s.code == code), None)
@@ -54,6 +61,13 @@ class VerdictTest(unittest.TestCase):
         assessment = assess(scan(self.root))
         self.assertEqual(assessment.verdict, VERDICT_FINE)
         self.assertEqual(assessment.reclaimable_bytes, 0)
+
+    def test_low_disk_space_says_soon(self) -> None:
+        FakeHome(self.root, threads=[ThreadSpec("t1", age_days=0, size_bytes=512)]).build()
+        with mock.patch("amnesia.tasks.environment.free_bytes", return_value=10 * GB):
+            assessment = assess(scan(self.root))
+        self.assertEqual(assessment.verdict, VERDICT_SOON)
+        self.assertEqual(self._signal(assessment, "disk_free").severity, SEVERITY_WATCH)
 
     def test_a_little_old_data_says_soon(self) -> None:
         FakeHome(

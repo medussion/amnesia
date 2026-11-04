@@ -43,7 +43,7 @@ class LogsTask(Task):
         total = sum(path.stat().st_size for path in files)
         if total < ctx.settings.log_rotate_mb * 1024 * 1024:
             return []
-        destination_root = ctx.home.archived_logs / f"codex-tidy-{ctx.stamp}"
+        destination_root = ctx.home.archived_logs / f"amnesia-{ctx.stamp}"
         return [
             Operation(
                 OP_MOVE_PATH,

@@ -35,8 +35,8 @@ jobs:
           python -m pip install --upgrade pip build
           python -m build --wheel
           python -m pip install dist/*.whl
-          codex-tidy --help
-          codex-tidy doctor --codex-home "$RUNNER_TEMP/absent" || test $? -eq 2
+          amnesia --help
+          amnesia doctor --codex-home "$RUNNER_TEMP/absent" || test $? -eq 2
 
   guardrails:
     name: Safety guardrails
@@ -58,11 +58,11 @@ jobs:
           # separate typed-confirmation and fresh-key checks.
           banned = ("shutil.rmtree", "os.rmdir", "os.removedirs", "DROP TABLE", "drop table")
           allowed_unlink = {
-              "src/codex_tidy/ops.py",
-              "src/codex_tidy/env.py",
-              "src/codex_tidy/purge.py",
+              "src/amnesia/ops.py",
+              "src/amnesia/env.py",
+              "src/amnesia/purge.py",
           }
-          allowed_rmdir = {"src/codex_tidy/purge.py"}
+          allowed_rmdir = {"src/amnesia/purge.py"}
 
           problems = []
           for path in sorted(Path("src").rglob("*.py")):
@@ -83,10 +83,61 @@ jobs:
       - name: Every task declares a name and a title
         run: |
           PYTHONPATH=src python - <<'PY'
-          from codex_tidy.tasks import ALL_TASKS
+          from amnesia.tasks import ALL_TASKS
           names = [t.name for t in ALL_TASKS]
           assert all(names), "a task is missing its name"
           assert len(names) == len(set(names)), f"duplicate task names: {names}"
           assert all(t.title for t in ALL_TASKS), "a task is missing its title"
           print("ok:", ", ".join(names))
           PY
+
+      - name: Amnesia branding and bundle identity
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          forbidden = (
+              ("codex" + "_tidy").encode(),
+              ("codex" + "-tidy").encode(),
+              ("Codex" + " Tidy").encode(),
+          )
+          problems = []
+          for path in sorted(Path(".").rglob("*")):
+              if not path.is_file() or ".git" in path.parts:
+                  continue
+              data = path.read_bytes()
+              for needle in forbidden:
+                  if needle in data:
+                      problems.append(f"{path}: contains retired product name")
+          plist = Path("macos/Resources/Info.plist").read_text(encoding="utf-8")
+          if "medusia.com.amnesia" not in plist:
+              problems.append("Info.plist: missing medusia.com.amnesia")
+          if problems:
+              raise SystemExit("\n".join(problems))
+          print("ok")
+          PY
+
+  macos-app:
+    name: macOS app bundle
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install build-only dependency
+        run: python -m pip install pyinstaller
+      - name: Build app
+        run: ./scripts/build_macos_app.sh
+      - name: Verify app
+        run: |
+          plutil -lint dist/Amnesia.app/Contents/Info.plist
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' dist/Amnesia.app/Contents/Info.plist)" = "medusia.com.amnesia"
+          codesign --verify --deep --strict dist/Amnesia.app
+          printf '%s\n' '{"home":"/path/that/does/not/exist"}' | dist/Amnesia.app/Contents/Resources/amnesia-helper state > helper.json || test $? -eq 3
+          python -c 'import json; d=json.load(open("helper.json")); assert d["ok"] is False; assert d["blocked"]'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Amnesia-macOS
+          path: dist/Amnesia-macOS.zip
+          if-no-files-found: error

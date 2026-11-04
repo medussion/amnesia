@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from codex_tidy.cli import main
+from amnesia.cli import main
 
 from .fake_home import FakeHome, ThreadSpec
 
@@ -52,7 +52,7 @@ class ScanIsReadOnlyTest(unittest.TestCase):
 
         self.assertEqual(code, 0)
         self.assertEqual(before, after, "scan modified the Codex home")
-        self.assertFalse((self.root / ".codex-tidy.lock").exists(), "scan took a lock")
+        self.assertFalse((self.root / ".amnesia.lock").exists(), "scan took a lock")
 
     def test_scan_text_withholds_the_operation_list(self) -> None:
         with mock.patch("sys.stdout") as stdout:

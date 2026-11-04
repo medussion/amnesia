@@ -117,7 +117,7 @@ class LeftoversTask(Task):
     def plan(self, ctx: Context) -> list[Operation]:
         if not ctx.settings.archive_leftovers:
             return []
-        destination_root = ctx.home.archived_leftovers / f"codex-tidy-{ctx.stamp}"
+        destination_root = ctx.home.archived_leftovers / f"amnesia-{ctx.stamp}"
         return [
             Operation(
                 OP_MOVE_PATH,

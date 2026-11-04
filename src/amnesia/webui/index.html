@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>codex-tidy</title>
+<title>amnesia</title>
 <style>
 :root{
   --bg:#f7f7f8; --panel:#fff; --line:#e3e3e6; --ink:#1b1b1f; --muted:#6b6b73;
@@ -114,7 +114,7 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
 <body>
 <div class="wrap">
   <header>
-    <h1>codex-tidy</h1>
+    <h1>amnesia</h1>
     <span class="path" id="home"></span>
     <div class="right">
       <label class="toggle"><input type="checkbox" id="reveal" checked> 실제 이름 보기</label>
@@ -273,7 +273,7 @@ function readOptions(){
 async function api(path, body){
   const res = await fetch(path, {
     method: body ? "POST" : "GET",
-    headers: body ? {"Content-Type":"application/json","X-Codex-Tidy":"1"} : {},
+    headers: body ? {"Content-Type":"application/json","X-Amnesia":"1"} : {},
     body: body ? JSON.stringify(body) : undefined
   });
   return res.json();
@@ -302,7 +302,7 @@ async function load(){
       for (const key of selectedArchives) if (!liveArchives.has(key)) selectedArchives.delete(key);
     }
   } catch (e) {
-    $("app").innerHTML = `<div class="blocker">화면을 새로 고칠 수 없습니다. 터미널에서 codex-tidy가 아직 실행 중인지 확인해 주세요.</div>`;
+    $("app").innerHTML = `<div class="blocker">화면을 새로 고칠 수 없습니다. 터미널에서 amnesia가 아직 실행 중인지 확인해 주세요.</div>`;
     busy = false; return;
   }
   busy = false;
@@ -689,7 +689,7 @@ $("generate").onclick = generateHandoffs;
 $("restore").onclick = restore;
 $("quit").onclick = async () => {
   await api("/api/shutdown", {});
-  document.body.innerHTML = '<div class="wrap"><p class="muted">codex-tidy를 종료했습니다. 이 탭을 닫으셔도 됩니다.</p></div>';
+  document.body.innerHTML = '<div class="wrap"><p class="muted">amnesia를 종료했습니다. 이 탭을 닫으셔도 됩니다.</p></div>';
 };
 
 load();

@@ -1,10 +1,10 @@
 """Command line interface.
 
-    codex-tidy scan       observe only, never writes, never locks
-    codex-tidy plan       show (or save) exactly which operations would run
-    codex-tidy apply      back up, journal, execute, roll back on failure
-    codex-tidy restore    replay a journal's undo payloads
-    codex-tidy doctor     environment and schema compatibility
+    amnesia scan       observe only, never writes, never locks
+    amnesia plan       show (or save) exactly which operations would run
+    amnesia apply      back up, journal, execute, roll back on failure
+    amnesia restore    replay a journal's undo payloads
+    amnesia doctor     environment and schema compatibility
 
 ``scan`` is the default when no subcommand is given.
 """
@@ -33,7 +33,7 @@ from .journal import find_latest_journal
 from .model import Plan, Settings
 from .tasks import ALL_TASKS, TASK_NAMES
 
-PROGRAM = "codex-tidy"
+PROGRAM = "amnesia"
 
 
 def _csv_set(value: str | None) -> frozenset[str]:
@@ -223,9 +223,9 @@ def cmd_scan(args: argparse.Namespace, settings: Settings, *, command: str) -> i
 
     notes = []
     if command == "scan":
-        notes.append("next           codex-tidy plan")
+        notes.append("next           amnesia plan")
     elif plan.operations:
-        notes.append("next           codex-tidy apply")
+        notes.append("next           amnesia apply")
         if getattr(args, "out", None):
             notes.append(f"plan saved     {args.out}")
     else:
@@ -315,7 +315,7 @@ def cmd_apply(args: argparse.Namespace, settings: Settings) -> int:
         notes.append(f"failed         {result.error}")
         notes.append(f"rolled back    {result.rolled_back} operation(s)")
     else:
-        notes.append(f"undo with      codex-tidy restore --journal {result.journal_path}")
+        notes.append(f"undo with      amnesia restore --journal {result.journal_path}")
     notes.extend(result.notes)
 
     if args.as_json:
@@ -389,7 +389,7 @@ def cmd_restore(args: argparse.Namespace, settings: Settings) -> int:
             + "\n"
         )
     else:
-        print(f"codex-tidy restore\n  journal      {result.journal_path}")
+        print(f"amnesia restore\n  journal      {result.journal_path}")
         print(f"  undone       {result.undone}")
         print(f"  failed       {result.failed}")
         for note in result.notes:
@@ -436,7 +436,7 @@ def cmd_doctor(args: argparse.Namespace, settings: Settings) -> int:
         sys.stdout.write(json.dumps(report, indent=2) + "\n")
         return EXIT_OK if home.exists() else EXIT_ENVIRONMENT
 
-    print("codex-tidy doctor")
+    print("amnesia doctor")
     print(f"  python            {report['python']}")
     print(f"  codex home        {report['codex_home']}  {'ok' if report['codex_home_exists'] else 'MISSING'}")
     print(f"  state database    {'found' if report['state_db'] else 'missing'}")

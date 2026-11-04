@@ -1,40 +1,72 @@
-# codex-tidy
+# Amnesia
 
-Local Codex state grows: session transcripts, log databases, stale worktrees,
-oversized thread metadata, half-written temp files. `codex-tidy` finds what has
-grown and moves it out of the way.
+Amnesia is a native macOS utility for inspecting, handing off, archiving, and
+restoring local Codex state without loading large conversations into the app.
+The bundle identifier is `medusia.com.amnesia`.
 
-**The guarantee:** nothing is ever deleted, every change is written to a journal
-*before* it happens, and any run can be undone with one command.
+Normal cleanup is backup-first, journalled before execution, and reversible.
+Permanent archive deletion is a separate action with no default selection and
+requires typing `영구 삭제`.
+
+## macOS app
+
+The SwiftUI app is a thin presentation layer. It never opens Codex databases or
+session transcripts itself. A bundled helper calls the same Python application
+services used by the CLI and browser UI.
+
+Build a self-contained, ad-hoc signed app:
+
+```bash
+python3 -m pip install pyinstaller
+./scripts/build_macos_app.sh
+open dist/Amnesia.app
+```
+
+The output is `dist/Amnesia.app` plus `dist/Amnesia-macOS.zip`. Release builds
+should replace ad-hoc signing with a Developer ID signature and notarization.
+Amnesia is intentionally distributed outside the Mac App Store because its job
+requires direct access to the user's Codex home and process state.
+
+The app can:
+
+- scan without writing or taking a lock
+- show the exact cleanup plan and reclaimable size
+- create bounded local Handoffs for selected continuing projects
+- archive selected state only after a visible confirmation
+- restore the latest journalled cleanup
+- permanently delete exact archived sessions only after typed confirmation
+
+It never performs automatic background cleanup.
+
+## CLI
 
 ```
-codex-tidy gui                               # browser UI: verdict, guidance, one Clean button
-codex-tidy scan                              # read-only, writes nothing
-codex-tidy plan                              # exactly what would change
-codex-tidy apply --yes                       # backup, journal, execute
-codex-tidy restore --yes                     # put it all back
+amnesia gui                    # legacy localhost browser UI
+amnesia scan                   # read-only, writes nothing
+amnesia plan                   # exactly what would change
+amnesia apply --yes            # backup, journal, execute
+amnesia restore --yes          # put it all back
 ```
 
 ## Install
 
-Requires Python 3.11+ and nothing else. No third-party dependencies, on purpose:
-there is no supply chain to audit before an internal rollout, and nothing to
-install on a locked-down machine.
+The CLI requires Python 3.11+ and uses only the standard library at runtime.
+PyInstaller is a build-only dependency for creating the standalone macOS helper.
 
 ```bash
-pip install --user /path/to/codex-tidy
+pip install --user /path/to/amnesia
 ```
 
 Or run it straight from a checkout, no install at all:
 
 ```bash
-PYTHONPATH=src python3 -m codex_tidy scan
+PYTHONPATH=src python3 -m amnesia scan
 ```
 
 ## Browser UI
 
 ```bash
-codex-tidy gui
+amnesia gui
 ```
 
 Starts a local server, prints a URL, and opens it. The page answers three
@@ -85,7 +117,7 @@ there is a test asserting every task has UI copy.
 **Verdict.** `now` when any single signal is severe or more than 1 GB would move,
 `soon` when something is worth watching, `fine` otherwise. Each signal shows its
 measured number against the threshold it was judged by, and the thresholds are
-named constants in [`advice.py`](src/codex_tidy/advice.py) with the reasoning
+named constants in [`advice.py`](src/amnesia/advice.py) with the reasoning
 attached — disagree and move them.
 
 **It is locked down, because this process can move a developer's files:**
@@ -112,7 +144,7 @@ creates no files, and there is a test asserting the Codex home is byte-identical
 afterwards. Run it as many times as you like.
 
 ```bash
-codex-tidy scan
+amnesia scan
 ```
 
 Output is pseudonymous by default — thread ids, titles and paths are replaced with
@@ -122,13 +154,13 @@ need the real values.
 When you want to see the exact operation list:
 
 ```bash
-codex-tidy plan --out plan.json
+amnesia plan --out plan.json
 ```
 
 Then apply it. The plan is rebuilt at apply time unless you pass `--plan plan.json`.
 
 ```bash
-codex-tidy apply --yes
+amnesia apply --yes
 ```
 
 ## What it looks at
@@ -189,7 +221,7 @@ back through the same executor in reverse order. There is no second rollback cod
 path that could drift out of step.
 
 **Refusals before any byte moves.** `apply` stops if Codex is running, if another
-`codex-tidy` holds the lock, if the plan would move more than `--max-archive-gb`
+`amnesia` holds the lock, if the plan would move more than `--max-archive-gb`
 (20 GB), or if the backup volume lacks room.
 
 **Is Codex running?** Answered by asking who actually holds the Codex databases
@@ -216,16 +248,16 @@ Codex's own rename log. It is append-only and harmless to leave. `plan` and
   normalisation) but not verified on Windows in this repository.
 - **Codex schema:** every task declares the columns it needs. If Codex ships a
   schema this tool does not recognise, the affected task is skipped with a stated
-  reason rather than failing part-way through. `codex-tidy doctor` shows exactly
+  reason rather than failing part-way through. `amnesia doctor` shows exactly
   which tasks are available against your installation.
 - **Databases modified:** only `state_5.sqlite`, and `logs_2.sqlite` is moved
   during rotation. `memories_1.sqlite`, `goals_1.sqlite` and anything under
   `sqlite/` are reported for size and never touched.
 
-Run `codex-tidy doctor` first on any machine you have not used it on:
+Run `amnesia doctor` first on any machine you have not used it on:
 
 ```bash
-codex-tidy doctor
+amnesia doctor
 ```
 
 ## Privacy
@@ -237,7 +269,7 @@ reports cannot be correlated after the fact. `--reveal` opts out.
 
 Backup folders are a different matter: they contain real Codex metadata by
 design. Keep them local, and delete them by hand when you no longer need the
-undo. `codex-tidy` reports how many backup runs have accumulated but never
+undo. `amnesia` reports how many backup runs have accumulated but never
 removes one.
 
 ## Exit codes
@@ -260,13 +292,14 @@ need the conversations it is about to archive. Have it report and let a person
 decide.
 
 ```bash
-codex-tidy scan --json > "codex-tidy-$(date +%F).json"
+amnesia scan --json > "amnesia-$(date +%F).json"
 ```
 
 ## Development
 
 ```bash
 python3 -m unittest discover -s tests -t .
+swift build
 ```
 
 The suite builds synthetic Codex homes and covers, among others: that `scan`
@@ -281,7 +314,9 @@ its access controls.
 ## Layout
 
 ```
-src/codex_tidy/
+src/amnesia/
+  application.py shared application services and safety gates
+  app_bridge.py  bounded JSON interface for the native app
   cli.py         subcommands and flags
   engine.py      scan / plan / apply / restore orchestration
   advice.py      the verdict: language-neutral signals and guidance codes
@@ -293,6 +328,9 @@ src/codex_tidy/
   render.py      text and JSON output (English copy for advice codes)
   tasks/         one module per concern
   webui/         local server + the single-page Korean UI
+macos/
+  Sources/       native SwiftUI presentation layer
+  Resources/     app bundle metadata
 ```
 
 Tasks only observe and propose. They never write. The executor is the only code

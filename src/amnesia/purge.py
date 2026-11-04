@@ -106,7 +106,7 @@ def purge_selected(home: CodexHome, selected_keys: Iterable[str], confirmation: 
 
     items = [available[key] for key in requested]
     root = canonical(home.archived_sessions)
-    staging = root / f".codex-tidy-purge-{uuid.uuid4().hex}"
+    staging = root / f".amnesia-purge-{uuid.uuid4().hex}"
     staged: list[tuple[Path, Path]] = []
     conn = None
     try:

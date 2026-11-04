@@ -19,7 +19,7 @@ LOG_DB_GLOB = "logs_2.sqlite*"
 GLOBAL_STATE_NAME = ".codex-global-state.json"
 SESSION_INDEX_NAME = "session_index.jsonl"
 CONFIG_NAME = "config.toml"
-LOCK_NAME = ".codex-tidy.lock"
+LOCK_NAME = ".amnesia.lock"
 
 # Databases Codex is known to keep in its home. Any of them being open means a
 # mutating run is unsafe, not just the one we intend to edit.
@@ -175,8 +175,8 @@ def default_backup_root(home: CodexHome) -> Path:
     """Prefer Documents so backups are visible and easy to delete by hand."""
     documents = Path.home() / "Documents"
     if documents.is_dir():
-        return documents / "Codex" / "codex-tidy-backups"
-    return home.root / "backups" / "codex-tidy"
+        return documents / "Codex" / "amnesia-backups"
+    return home.root / "backups" / "amnesia"
 
 
 def pinned_thread_ids(home: CodexHome) -> frozenset[str]:
@@ -467,7 +467,7 @@ class LockHeld(RuntimeError):
     def __init__(self, holder: dict | None):
         self.holder = holder or {}
         pid = self.holder.get("pid", "unknown")
-        super().__init__(f"another codex-tidy run holds the lock (pid {pid})")
+        super().__init__(f"another amnesia run holds the lock (pid {pid})")
 
 
 class HomeLock:

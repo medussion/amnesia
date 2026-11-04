@@ -8,8 +8,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from codex_tidy.env import resolve_codex_home
-from codex_tidy.handoff import (
+from amnesia.env import resolve_codex_home
+from amnesia.handoff import (
     default_handoff_root,
     display_title,
     extract_transcript,
@@ -18,7 +18,7 @@ from codex_tidy.handoff import (
     inspect_repository,
     list_sessions,
 )
-from codex_tidy.privacy import Redactor
+from amnesia.privacy import Redactor
 
 from .fake_home import FakeHome, ThreadSpec
 

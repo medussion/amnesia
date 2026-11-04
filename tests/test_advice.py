@@ -6,8 +6,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from codex_tidy import engine
-from codex_tidy.advice import (
+from amnesia import engine
+from amnesia.advice import (
     SEVERITY_HIGH,
     SEVERITY_WATCH,
     VERDICT_FINE,
@@ -15,8 +15,8 @@ from codex_tidy.advice import (
     VERDICT_SOON,
     assess,
 )
-from codex_tidy.env import resolve_codex_home
-from codex_tidy.model import Settings
+from amnesia.env import resolve_codex_home
+from amnesia.model import Settings
 
 from .fake_home import FakeHome, ThreadSpec
 

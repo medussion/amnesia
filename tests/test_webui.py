@@ -12,9 +12,9 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 from unittest import mock
 
-from codex_tidy.env import resolve_codex_home
-from codex_tidy.model import Settings
-from codex_tidy.webui.server import Handler, UiContext, load_page, settings_with
+from amnesia.env import resolve_codex_home
+from amnesia.model import Settings
+from amnesia.webui.server import Handler, UiContext, load_page, settings_with
 
 from .fake_home import FakeHome, ThreadSpec
 
@@ -22,7 +22,7 @@ from .fake_home import FakeHome, ThreadSpec
 class OptionCoercionTest(unittest.TestCase):
     def test_string_false_does_not_turn_a_switch_on(self) -> None:
         """bool("0") is True in Python; the query parser must not fall for it."""
-        from codex_tidy.webui.server import _options_from_query
+        from amnesia.webui.server import _options_from_query
 
         options = _options_from_query({"repair_thread_metadata": ["0"], "reveal": ["1"]})
         self.assertIs(options["repair_thread_metadata"], False)
@@ -50,7 +50,7 @@ class OptionCoercionTest(unittest.TestCase):
 class PagePackagingTest(unittest.TestCase):
     def test_the_page_is_packaged_and_loadable(self) -> None:
         page = load_page().decode("utf-8")
-        self.assertIn("<title>codex-tidy</title>", page)
+        self.assertIn("<title>amnesia</title>", page)
         self.assertIn('lang="ko"', page)
         self.assertIn('id="reveal" checked', page)
         self.assertIn('id="toggle-children"', page)
@@ -77,7 +77,7 @@ class PagePackagingTest(unittest.TestCase):
         """A task with no entry in the UI's table would render as a bare code."""
         import re
 
-        from codex_tidy.tasks import TASK_NAMES
+        from amnesia.tasks import TASK_NAMES
 
         page = load_page().decode("utf-8")
         table = re.search(r"const TASK = \{(.*?)\};", page, re.S).group(1)
@@ -101,9 +101,9 @@ class WebUiTestCase(unittest.TestCase):
         self.addCleanup(self._tmp.cleanup)
 
         for target in (
-            "codex_tidy.engine.codex_processes",
-            "codex_tidy.webui.server.codex_processes",
-            "codex_tidy.tasks.environment.codex_processes",
+            "amnesia.engine.codex_processes",
+            "amnesia.application.codex_processes",
+            "amnesia.tasks.environment.codex_processes",
         ):
             patcher = mock.patch(target, return_value=[])
             patcher.start()
@@ -141,13 +141,13 @@ class WebUiTestCase(unittest.TestCase):
         conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=30)
         headers = {"Host": host or f"127.0.0.1:{self.port}"}
         if cookie:
-            headers["Cookie"] = f"codex_tidy_token={self.context.token}"
+            headers["Cookie"] = f"amnesia_token={self.context.token}"
         payload = None
         if body is not None:
             payload = json.dumps(body)
             headers["Content-Type"] = "application/json"
             if guard:
-                headers["X-Codex-Tidy"] = "1"
+                headers["X-Amnesia"] = "1"
         try:
             conn.request(method, path, body=payload, headers=headers)
             response = conn.getresponse()
@@ -279,12 +279,12 @@ class CleanTest(WebUiTestCase):
         self.assertEqual(self.home_fixture.thread_row("old-1")["archived"], 0)
 
     def test_running_codex_blocks_the_clean_button_path(self) -> None:
-        from codex_tidy.env import ProcInfo
+        from amnesia.env import ProcInfo
 
         self.generate_for_cleanup()
 
         with mock.patch(
-            "codex_tidy.engine.codex_processes",
+            "amnesia.engine.codex_processes",
             return_value=[ProcInfo(pid=1, name="codex", reason="holds state_5.sqlite")],
         ):
             _s, _h, raw = self.request("POST", "/api/apply", body={"excluded": []})

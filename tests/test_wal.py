@@ -16,8 +16,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from codex_tidy import db
-from codex_tidy.cli import main
+from amnesia import db
+from amnesia.cli import main
 
 from .fake_home import FakeHome, ThreadSpec
 
@@ -88,7 +88,7 @@ class WalDatabaseTest(unittest.TestCase):
                 raise sqlite3.OperationalError("unable to open database file")
             return real_connect(target, *args, **kwargs)
 
-        with mock.patch("codex_tidy.db.sqlite3.connect", side_effect=failing_connect):
+        with mock.patch("amnesia.db.sqlite3.connect", side_effect=failing_connect):
             with self.assertRaises(sqlite3.Error):
                 db.connect(self.home.state_db, readonly=True)
 
@@ -106,7 +106,7 @@ class WalDatabaseTest(unittest.TestCase):
                     raise sqlite3.OperationalError("unable to open database file")
             return real_connect(target, *args, **kwargs)
 
-        with mock.patch("codex_tidy.db.sqlite3.connect", side_effect=recording_connect):
+        with mock.patch("amnesia.db.sqlite3.connect", side_effect=recording_connect):
             conn = db.connect(self.home.state_db, readonly=True)
         conn.close()
 

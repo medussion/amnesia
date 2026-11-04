@@ -9,17 +9,17 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from codex_tidy.cli import main
+from amnesia.cli import main
 
 from .fake_home import FakeHome, ThreadSpec
 
-NO_CODEX = {"codex_tidy.engine.codex_processes": [], "codex_tidy.cli.codex_processes": []}
+NO_CODEX = {"amnesia.engine.codex_processes": [], "amnesia.cli.codex_processes": []}
 
 
 def patch_no_codex():
     return mock.patch.multiple(
-        "codex_tidy.engine", codex_processes=mock.Mock(return_value=[])
-    ), mock.patch("codex_tidy.cli.codex_processes", return_value=[])
+        "amnesia.engine", codex_processes=mock.Mock(return_value=[])
+    ), mock.patch("amnesia.cli.codex_processes", return_value=[])
 
 
 class ApplyTestCase(unittest.TestCase):
@@ -30,8 +30,8 @@ class ApplyTestCase(unittest.TestCase):
         self.backups = self.base / "backups"
         self.addCleanup(self._tmp.cleanup)
         self._patchers = [
-            mock.patch("codex_tidy.engine.codex_processes", return_value=[]),
-            mock.patch("codex_tidy.cli.codex_processes", return_value=[]),
+            mock.patch("amnesia.engine.codex_processes", return_value=[]),
+            mock.patch("amnesia.cli.codex_processes", return_value=[]),
         ]
         for patcher in self._patchers:
             patcher.start()
@@ -115,23 +115,23 @@ class SessionArchiveTest(ApplyTestCase):
     def test_lock_blocks_a_second_run(self) -> None:
         import os
 
-        (self.root / ".codex-tidy.lock").write_text(
+        (self.root / ".amnesia.lock").write_text(
             json.dumps({"pid": os.getpid(), "started": "now"}), encoding="utf-8"
         )
         self.assertEqual(self.run_cli("apply", "--only", "sessions", "--yes"), 3)
 
     def test_stale_lock_is_reclaimed(self) -> None:
-        (self.root / ".codex-tidy.lock").write_text(
+        (self.root / ".amnesia.lock").write_text(
             json.dumps({"pid": 999_999_999, "started": "long ago"}), encoding="utf-8"
         )
         self.assertEqual(self.run_cli("apply", "--only", "sessions", "--yes"), 0)
-        self.assertFalse((self.root / ".codex-tidy.lock").exists())
+        self.assertFalse((self.root / ".amnesia.lock").exists())
 
     def test_running_codex_blocks_apply(self) -> None:
-        from codex_tidy.env import ProcInfo
+        from amnesia.env import ProcInfo
 
         with mock.patch(
-            "codex_tidy.engine.codex_processes",
+            "amnesia.engine.codex_processes",
             return_value=[ProcInfo(pid=1, name="Codex", command="codex app-server")],
         ):
             self.assertEqual(self.run_cli("apply", "--only", "sessions", "--yes"), 3)
@@ -226,7 +226,7 @@ class WorktreeTest(ApplyTestCase):
         self.assertEqual(len(moved), 1)
 
     def test_dirty_worktree_is_excluded(self) -> None:
-        with mock.patch("codex_tidy.tasks.worktrees._git_dirty", return_value=True):
+        with mock.patch("amnesia.tasks.worktrees._git_dirty", return_value=True):
             code = self.run_cli("apply", "--only", "worktrees", "--yes", "--worktree-age-days", "7")
         self.assertEqual(code, 0)
         self.assertTrue(self.stale.exists(), "a dirty worktree must not be archived by default")
@@ -283,7 +283,7 @@ class RollbackTest(ApplyTestCase):
         before = {tid: self.home.thread_row(tid) for tid in ("old-1", "old-2")}
         real_perform = None
 
-        from codex_tidy import ops as ops_module
+        from amnesia import ops as ops_module
 
         real_perform = ops_module.perform
         calls = {"n": 0}
@@ -294,7 +294,7 @@ class RollbackTest(ApplyTestCase):
                 raise ops_module.OperationError("injected failure")
             return real_perform(kind, payload, conn=conn)
 
-        with mock.patch("codex_tidy.engine.perform_operation", side_effect=lambda op, conn: flaky(op.kind, op.payload, conn=conn)):
+        with mock.patch("amnesia.engine.perform_operation", side_effect=lambda op, conn: flaky(op.kind, op.payload, conn=conn)):
             code = self.run_cli("apply", "--only", "sessions", "--yes")
 
         self.assertEqual(code, 4, "a failed apply must not report success")

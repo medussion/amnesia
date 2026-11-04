@@ -124,7 +124,7 @@ def _operations_for(ctx: Context, candidates: list[Candidate]) -> list[Operation
     """Build the inseparable move + DB update pair for session candidates."""
     assert ctx.schema is not None
     archived_columns = ctx.schema.archived_columns
-    destination_root = ctx.home.archived_sessions / f"codex-tidy-{ctx.stamp}"
+    destination_root = ctx.home.archived_sessions / f"amnesia-{ctx.stamp}"
     now = int(time.time())
     operations: list[Operation] = []
     for item in candidates:

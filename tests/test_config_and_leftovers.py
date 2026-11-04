@@ -11,8 +11,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from codex_tidy.cli import main
-from codex_tidy.tasks.config_toml import _plan_prune
+from amnesia.cli import main
+from amnesia.tasks.config_toml import _plan_prune
 
 from .fake_home import FakeHome, ThreadSpec
 
@@ -29,8 +29,8 @@ class ConfigPruneTest(unittest.TestCase):
         )
         self.addCleanup(self._tmp.cleanup)
         for patcher in (
-            mock.patch("codex_tidy.engine.codex_processes", return_value=[]),
-            mock.patch("codex_tidy.cli.codex_processes", return_value=[]),
+            mock.patch("amnesia.engine.codex_processes", return_value=[]),
+            mock.patch("amnesia.cli.codex_processes", return_value=[]),
         ):
             patcher.start()
             self.addCleanup(patcher.stop)
@@ -93,8 +93,8 @@ class LeftoverTest(unittest.TestCase):
         FakeHome(self.root, threads=[ThreadSpec("t1")]).build()
         self.addCleanup(self._tmp.cleanup)
         for patcher in (
-            mock.patch("codex_tidy.engine.codex_processes", return_value=[]),
-            mock.patch("codex_tidy.cli.codex_processes", return_value=[]),
+            mock.patch("amnesia.engine.codex_processes", return_value=[]),
+            mock.patch("amnesia.cli.codex_processes", return_value=[]),
         ):
             patcher.start()
             self.addCleanup(patcher.stop)

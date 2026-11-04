@@ -138,7 +138,7 @@ class WorktreesTask(Task):
         return findings
 
     def plan(self, ctx: Context) -> list[Operation]:
-        destination_root = ctx.home.archived_worktrees / f"codex-tidy-{ctx.stamp}"
+        destination_root = ctx.home.archived_worktrees / f"amnesia-{ctx.stamp}"
         operations = []
         for item in _stale(ctx):
             if item.dirty and not ctx.settings.archive_dirty_worktrees:

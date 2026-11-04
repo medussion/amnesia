@@ -1,4 +1,4 @@
-codex-tidy
+Amnesia
 Copyright (c) 2026 PuzzleOne
 
 Independence of implementation
@@ -28,9 +28,10 @@ Where this implementation deliberately differs:
   * scan is read-only by construction and covered by a test asserting the Codex
     home is unchanged
 
-Third-party dependencies
-------------------------
-None. The Python standard library only.
+Runtime dependencies
+--------------------
+The Python core uses the standard library only. PyInstaller is used only while
+building the standalone macOS helper and is not imported by the application.
 
 Trademarks
 ----------

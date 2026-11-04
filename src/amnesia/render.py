@@ -110,7 +110,7 @@ def render_text(
     show_operations: bool = True,
 ) -> str:
     lines = [
-        f"codex-tidy {command}",
+        f"amnesia {command}",
         f"  codex home   {plan.codex_home}",
         f"  privacy      {'raw values shown (--reveal)' if settings.reveal else 'pseudonymous'}",
         f"  run          {plan.created}",

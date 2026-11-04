@@ -2,7 +2,7 @@
 
 Every operation is recorded *before* it runs and its undo payload is recorded
 immediately after. If the process dies mid-apply, the journal still describes
-exactly what was attempted and what already succeeded, so ``codex-tidy restore``
+exactly what was attempted and what already succeeded, so ``amnesia restore``
 can put things back without guessing.
 """
 

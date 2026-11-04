@@ -272,7 +272,7 @@ def apply_plan(home: CodexHome, plan: Plan, settings: Settings) -> ApplyResult:
     try:
         journal.open(
             {
-                "tool": "codex-tidy",
+                "tool": "amnesia",
                 "stamp": plan.stamp,
                 "codex_home": str(home.root),
                 "backup_root": str(backup_root),
@@ -350,7 +350,7 @@ def restore(home: CodexHome, journal_path: Path) -> RestoreResult:
     conn = dbmod.connect(home.state_db, readonly=False) if home.state_db.is_file() else None
     trail = Journal(journal_path.parent / "restore.jsonl")
     try:
-        trail.open({"tool": "codex-tidy", "action": "restore", "source": str(journal_path)})
+        trail.open({"tool": "amnesia", "action": "restore", "source": str(journal_path)})
         for index, undo in enumerate(loaded.undo_stack()):
             kind = undo.get("kind")
             payload = undo.get("payload") or {}
@@ -399,7 +399,7 @@ def filter_plan(plan: Plan, excluded_keys: set[str]) -> Plan:
 
 def resolve_backup_root(home: CodexHome, settings: Settings, stamp: str) -> Path:
     base = settings.backup_root or default_backup_root(home)
-    return (base / f"codex-tidy-{stamp}").expanduser().resolve()
+    return (base / f"amnesia-{stamp}").expanduser().resolve()
 
 
 def fresh_stamp() -> str:

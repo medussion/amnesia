@@ -3,6 +3,7 @@ __pycache__/
 *.egg-info/
 .eggs/
 build/
+.build/
 dist/
 .venv/
 venv/
@@ -17,5 +18,5 @@ Thumbs.db
 # Local output: reports, plans, backups. Never commit these -- they contain real
 # Codex metadata.
 plan*.json
-codex-tidy-*.json
+amnesia-*.json
 backups/
